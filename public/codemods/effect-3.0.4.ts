@@ -34,12 +34,25 @@ export default function transformer(file: cs.FileInfo, api: cs.API) {
                   call.arguments.length > 1
                   && call.arguments[0].type !== "SpreadElement"
                 ) {
+                  const isEffectFunctionImported =
+                    root.find(j.ImportDeclaration, {
+                      source: { value: "effect/Function" },
+                    }).size() > 0
+
+                  if (!isEffectFunctionImported) {
+                    root.get().node.program.body.unshift(
+                      j.importDeclaration(
+                        [j.importNamespaceSpecifier(j.identifier("F"))],
+                        j.literal("effect/Function"),
+                      ),
+                    )
+                  }
                   yieldExpr.node.argument = j.callExpression(
                     j.memberExpression(
-                      call.arguments[0],
+                      j.identifier("F"),
                       j.identifier("pipe"),
                     ),
-                    call.arguments.slice(1),
+                    call.arguments,
                   )
                 }
               }
